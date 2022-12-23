@@ -1,0 +1,76 @@
+version: "3"
+
+services:
+  a-service:
+    container_name: a-service
+    image: node:10.16.3
+    restart: always
+    working_dir: /home/node/app
+    volumes:
+      - ./a-service:/home/node/app
+    environment:
+      NODE_ENV: production
+    command:
+      - /bin/sh
+      - -c
+      - |
+        npm install
+        npm start
+    networks:
+      - microservice
+
+  b-service:
+    container_name: b-service
+    image: node:10.16.3
+    restart: always
+    working_dir: /home/node/app
+    volumes:
+      - ./b-service:/home/node/app
+    environment:
+      NODE_ENV: production
+    command:
+      - /bin/sh
+      - -c
+      - |
+        npm install
+        npm start
+    networks:
+      - microservice
+
+  webserver:
+    image: nginx:mainline-alpine
+    container_name: webserver
+    ports:
+      - 80:80
+      - 443:443
+    restart: always
+    volumes:
+      - ./nginx/:/etc/nginx/conf.d/:ro
+      - certbot-etc:/etc/letsencrypt
+      - certbot-var:/var/lib/letsencrypt
+      - certbot-www:/var/www/certbot
+    depends_on:
+      - a-service
+      - b-service
+    networks:
+      - microservice
+
+
+  certbot:
+    image: certbot/certbot:latest
+    container_name: certbot
+    volumes:
+      - certbot-etc:/etc/letsencrypt
+      - certbot-var:/var/lib/letsencrypt
+      - certbot-www:/var/www/certbot
+    depends_on:
+      - webserver
+    command: certonly --staging --preferred-challenges=dns --webroot --webroot-path /var/www/certbot/ --email no-reply@nepalytics.com --agree-tos --no-eff-email -d test.aatish.me
+
+volumes:
+  certbot-etc:
+  certbot-var:
+  certbot-www:
+networks:
+  microservice:
+    driver: "bridge"
