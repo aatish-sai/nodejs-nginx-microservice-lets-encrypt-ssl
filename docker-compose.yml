@@ -65,7 +65,7 @@ services:
       - certbot-www:/var/www/certbot
     depends_on:
       - webserver
-    command: certonly --staging --preferred-challenges=dns --webroot --webroot-path /var/www/certbot/ --email no-reply@nepalytics.com --agree-tos --no-eff-email -d test.aatish.me
+    command: certonly --staging --webroot --webroot-path /var/www/certbot/ --email no-reply@nepalytics.com --agree-tos --no-eff-email -d test.aatish.me
 
 volumes:
   certbot-etc:
